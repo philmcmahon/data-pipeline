@@ -5,8 +5,8 @@ import os
 import boto3
 
 import whisperx
-import gc
 from whisperx.diarize import DiarizationPipeline
+from worker.detect_filetype import detect_file_type
 
 AWS_REGION = "eu-west-1"
 
@@ -29,6 +29,7 @@ def transcribe_audio(file_path, whisperx_model, batch_size=8):
     with open(vtt_path, "w") as vtt_file:
         vtt_file.write(result["vtt"])
     print(f"Transcription complete. VTT file saved to: {vtt_path}")
+    return vtt_path
 
 
 def consume_queue(queue_url, whisperx_model):
@@ -54,7 +55,15 @@ def consume_queue(queue_url, whisperx_model):
 
         s3.download_file(bucket, key, local_path)
         print(f"Downloaded: {local_path}")
-        transcribe_audio(local_path, whisperx_model)
+        file_type = detect_file_type(local_path)
+        if file_type == "audio_video":
+            transcript_path = transcribe_audio(local_path, whisperx_model)
+        elif file_type in ["PDF"]:
+            #paddleocr
+            print("PDF processing not yet implemented")
+        else:
+            print(f"Unsupported file type for file: {local_path}")
+
         os.remove(local_path)
 
         sqs.delete_message(

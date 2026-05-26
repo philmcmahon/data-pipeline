@@ -15,6 +15,7 @@ worker = [
     "whisperx",
     "rapidocr",
     "onnxruntime",
+    "mimetypes-magic",
 ]
 
 [project.scripts]
