@@ -3,7 +3,6 @@ import json
 import os
 
 import boto3
-import pika
 
 import whisperx
 import gc
@@ -28,18 +27,23 @@ def transcribe_audio(file_path):
     print(f"Transcription complete. VTT file saved to: {vtt_path}")
 
 
-def consume_queue(queue_name, url):
+def consume_queue(queue_url):
     s3 = boto3.client("s3")
-    connection = pika.BlockingConnection(pika.URLParameters(url))
-    channel = connection.channel()
-    channel.queue_declare(queue=queue_name, durable=True)
+    sqs = boto3.client("sqs")
 
     while True:
-        method, properties, body = channel.basic_get(queue=queue_name, auto_ack=False)
-        if method is None:
+        response = sqs.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=10,
+        )
+
+        messages = response.get("Messages", [])
+        if not messages:
             break
 
-        message = json.loads(body)
+        sqs_message = messages[0]
+        message = json.loads(sqs_message["Body"])
         bucket = message["bucket"]
         key = message["key"]
         local_path = os.path.join("/tmp", os.path.basename(key))
@@ -49,24 +53,18 @@ def consume_queue(queue_name, url):
         transcribe_audio(local_path)
         os.remove(local_path)
 
-        channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    connection.close()
+        sqs.delete_message(
+            QueueUrl=queue_url,
+            ReceiptHandle=sqs_message["ReceiptHandle"],
+        )
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("queue_name", help="RabbitMQ queue name")
+    parser.add_argument("queue_url", help="SQS queue URL")
     args = parser.parse_args()
 
-    rabbitmq_password = os.environ.get("QUEUE_PASSWORD")
-    if not rabbitmq_password:
-        print("Error: QUEUE_PASSWORD environment variable is not set")
-        return
-
-    rabbitmq_url = f"amqp://dataharvest:{rabbitmq_password}@rabbitmq.dh24workshop.uk"
-
-    consume_queue(args.queue_name, rabbitmq_url)
+    consume_queue(args.queue_url)
 
 
 if __name__ == "__main__":
