@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 
 import boto3
 
@@ -11,6 +12,13 @@ from worker.detect_filetype import detect_file_type
 from docling.document_converter import DocumentConverter
 
 AWS_REGION = "eu-west-1"
+
+
+def configure_output_streams():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True, write_through=True)
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(line_buffering=True, write_through=True)
 
 def initialize_whisperx():
     # whisper settings
@@ -90,6 +98,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("queue_url", help="SQS queue URL")
     args = parser.parse_args()
+
+    configure_output_streams()
 
     whisperx_model = initialize_whisperx()
     document_converter = initialize_document_converter()
