@@ -8,6 +8,7 @@ import whisperx
 import gc
 from whisperx.diarize import DiarizationPipeline
 
+AWS_REGION = "eu-west-1"
 
 def initialize_whisperx():
     # whisper settings
@@ -31,8 +32,8 @@ def transcribe_audio(file_path, whisperx_model, batch_size=8):
 
 
 def consume_queue(queue_url, whisperx_model):
-    s3 = boto3.client("s3")
-    sqs = boto3.client("sqs")
+    s3 = boto3.client("s3", region_name=AWS_REGION)
+    sqs = boto3.client("sqs", region_name=AWS_REGION)
 
     while True:
         response = sqs.receive_message(
