@@ -9,16 +9,19 @@ import gc
 from whisperx.diarize import DiarizationPipeline
 
 
-# whisper settings
-device = "cuda"
-batch_size = 8 # reduce if low on GPU mem
-compute_type = "float16" # change to "int8" if low on GPU mem (may reduce accuracy)
+def initialize_whisperx():
+    # whisper settings
+    device = "cuda"
+    batch_size = 8 # reduce if low on GPU mem
+    compute_type = "float16" # change to "int8" if low on GPU mem (may reduce accuracy)
 
-model = whisperx.load_model("large-v2", device, compute_type=compute_type)
+    model = whisperx.load_model("large-v2", device, compute_type=compute_type)
+    return model
 
-def transcribe_audio(file_path):
+
+def transcribe_audio(file_path, whisperx_model, batch_size=8):
     # Transcribe file with whisperx
-    result = model.transcribe(file_path, batch_size=batch_size)
+    result = whisperx_model.transcribe(file_path, batch_size=batch_size)
 
     # write vtt output to file
     vtt_path = file_path + ".vtt"
@@ -27,7 +30,7 @@ def transcribe_audio(file_path):
     print(f"Transcription complete. VTT file saved to: {vtt_path}")
 
 
-def consume_queue(queue_url):
+def consume_queue(queue_url, whisperx_model):
     s3 = boto3.client("s3")
     sqs = boto3.client("sqs")
 
@@ -50,7 +53,7 @@ def consume_queue(queue_url):
 
         s3.download_file(bucket, key, local_path)
         print(f"Downloaded: {local_path}")
-        transcribe_audio(local_path)
+        transcribe_audio(local_path, whisperx_model)
         os.remove(local_path)
 
         sqs.delete_message(
@@ -64,7 +67,9 @@ def main():
     parser.add_argument("queue_url", help="SQS queue URL")
     args = parser.parse_args()
 
-    consume_queue(args.queue_url)
+    whisperx_model = initialize_whisperx()
+
+    consume_queue(args.queue_url, whisperx_model)
 
 
 if __name__ == "__main__":
