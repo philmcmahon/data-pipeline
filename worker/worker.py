@@ -8,6 +8,8 @@ import whisperx
 from whisperx.diarize import DiarizationPipeline
 from worker.detect_filetype import detect_file_type
 
+from docling.document_converter import DocumentConverter
+
 AWS_REGION = "eu-west-1"
 
 def initialize_whisperx():
@@ -19,6 +21,19 @@ def initialize_whisperx():
     model = whisperx.load_model("large-v2", device, compute_type=compute_type)
     return model
 
+def initialize_document_converter():
+    converter = DocumentConverter()
+    return converter
+
+def ocr_document(file_path, document_converter):
+    # Convert document to text with docling
+    result = document_converter.convert(file_path)
+    markdown = result.document.export_to_markdown()
+    txt_path = file_path + ".txt"
+    with open(txt_path, "w") as txt_file:
+        txt_file.write(markdown)
+    print(f"OCR complete. Text file saved to: {txt_path}")
+    return txt_path
 
 def transcribe_audio(file_path, whisperx_model, batch_size=8):
     # Transcribe file with whisperx
@@ -32,7 +47,7 @@ def transcribe_audio(file_path, whisperx_model, batch_size=8):
     return vtt_path
 
 
-def consume_queue(queue_url, whisperx_model):
+def consume_queue(queue_url, whisperx_model, document_converter):
     s3 = boto3.client("s3", region_name=AWS_REGION)
     sqs = boto3.client("sqs", region_name=AWS_REGION)
 
@@ -59,8 +74,7 @@ def consume_queue(queue_url, whisperx_model):
         if file_type == "audio_video":
             transcript_path = transcribe_audio(local_path, whisperx_model)
         elif file_type in ["PDF"]:
-            #paddleocr
-            print("PDF processing not yet implemented")
+            ocr_path = ocr_document(local_path, document_converter)
         else:
             print(f"Unsupported file type for file: {local_path}")
 
@@ -78,8 +92,9 @@ def main():
     args = parser.parse_args()
 
     whisperx_model = initialize_whisperx()
+    document_converter = initialize_document_converter()
 
-    consume_queue(args.queue_url, whisperx_model)
+    consume_queue(args.queue_url, whisperx_model, document_converter)
 
 
 if __name__ == "__main__":

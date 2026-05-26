@@ -13,8 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 worker = [
     "whisperx",
-    "rapidocr",
-    "onnxruntime",
+    "docling",
     "mimetypes-magic",
 ]
 
