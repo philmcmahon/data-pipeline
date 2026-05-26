@@ -14,7 +14,8 @@ dependencies = [
 worker = [
     "whisperx",
     "docling",
-    "mimetypes-magic",
+    "openai",
+    "requests",
 ]
 
 [project.scripts]
