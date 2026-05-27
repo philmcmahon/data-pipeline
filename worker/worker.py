@@ -124,7 +124,7 @@ def get_document_converter():
 def get_openai_client():
     global _openai_client
     if _openai_client is None:
-        start_vllm_server("Qwen/Qwen3-8B-Q4_K_M")
+        start_vllm_server("Qwen/Qwen3-4B")
         from openai import OpenAI
         _openai_client = OpenAI(base_url=f"{VLLM_BASE_URL}/v1", api_key="unused")
     return _openai_client
@@ -161,7 +161,7 @@ def run_prompt(file_path, s3_uri, system_prompt):
         file_content = f.read()
 
     response = client.chat.completions.create(
-        model="Qwen/Qwen3-8B-Q4_K_M",
+        model="Qwen/Qwen3-4B",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": get_user_prompt(os.path.basename(file_path), s3_uri, file_content)},
