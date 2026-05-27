@@ -24,6 +24,30 @@ SYSTEM_PROMPT = (
 )
 
 
+def get_user_prompt(file_name, s3_uri, document):
+    return (
+        "You will see a document.\n"
+        "\n"
+        "You should identify whether this document is relevant to the investigation, and write some\n"
+        "short notes describing why it is or is not relevant.\n"
+        "\n"
+        "Your output should be a CSV following the schema:\n"
+        "\n"
+        '"input_file_name,input_file_s3_uri,matching_text,line_number_of_matching_text"\n'
+        "\n"
+        "For example:\n"
+        '"file.txt,s3://bucket//file.txt,matching_text,1"\n'
+        "\n"
+        "The output *must* be parseable as JSON. Do not add any text before or after the JSON.\n"
+        "Here is the document:\n"
+        "<document>\n"
+        f"<file_name>{file_name}</file_name>\n"
+        f"<s3_uri>{s3_uri}</s3_uri>\n"
+        f"<contents>{document}</contents>\n"
+        "</document>"
+    )
+
+
 def start_vllm_server(model, extra_args=None):
     global _vllm_process
     cmd = ["vllm", "serve", model, "--host", "127.0.0.1", "--port", "8000"]
@@ -130,7 +154,7 @@ def ocr_document(file_path):
     return md_path
 
 
-def run_prompt(file_path, s3_uri, user_prompt):
+def run_prompt(file_path, s3_uri, system_prompt):
     client = get_openai_client()
     print(f"Running prompt on file: {file_path}")
     with open(file_path) as f:
@@ -139,8 +163,8 @@ def run_prompt(file_path, s3_uri, user_prompt):
     response = client.chat.completions.create(
         model="Qwen/Qwen3-8B-Q4_K_M",
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"File: {s3_uri}\n\n{file_content}\n\nPrompt: {user_prompt}"},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": get_user_prompt(os.path.basename(file_path), s3_uri, file_content)},
         ],
     )
     csv_path = file_path + ".csv"
@@ -199,7 +223,7 @@ def consume_queue(queue_url, output_bucket):
             os.remove(output_path)
         elif job_type == "prompt":
             s3_uri = f"s3://{bucket}/{key}"
-            output_path = run_prompt(local_path, s3_uri, message["userPrompt"])
+            output_path = run_prompt(local_path, s3_uri, message["systemPrompt"])
             s3_key = f"prompt/{os.path.splitext(original_filename)[0]}.csv"
             upload_to_s3(s3, output_path, output_bucket, s3_key)
             os.remove(output_path)

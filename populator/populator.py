@@ -41,19 +41,19 @@ def main():
     )
     parser.add_argument("--bucket", default=DEFAULT_BUCKET, help="S3 bucket name")
     parser.add_argument(
-        "--user-prompt-file",
-        help="Path to a file containing the user prompt (required for 'prompt' job type)",
+        "--system-prompt-file",
+        help="Path to a file containing the system prompt (required for 'prompt' job type)",
     )
     args = parser.parse_args()
 
-    if args.job_type == "prompt" and not args.user_prompt_file:
-        parser.error("--user-prompt-file is required when job_type is 'prompt'")
+    if args.job_type == "prompt" and not args.system_prompt_file:
+        parser.error("--system-prompt-file is required when job_type is 'prompt'")
 
-    # If a user prompt file has been specified, read it into a variable
-    user_prompt = None
-    if args.user_prompt_file:
-        with open(args.user_prompt_file) as f:
-            user_prompt = f.read()
+    # If a system prompt file has been specified, read it into a variable
+    system_prompt = None
+    if args.system_prompt_file:
+        with open(args.system_prompt_file) as f:
+            system_prompt = f.read()
 
     # Get the list of files from the S3 bucket that we want to work on
     files_to_process = get_files_to_process(args.bucket, args.path)
@@ -62,8 +62,8 @@ def main():
     messages = []
     for key in files_to_process:
         msg = {"bucket": args.bucket, "key": key, "jobType": args.job_type}
-        if user_prompt is not None:
-            msg["userPrompt"] = user_prompt
+        if system_prompt is not None:
+            msg["systemPrompt"] = system_prompt
         messages.append(msg)
 
     publish_to_queue(args.queue_url, messages)
