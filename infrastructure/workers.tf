@@ -61,7 +61,7 @@ apt install -y ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswresample
 git clone https://github.com/philmcmahon/data-pipeline.git $${WORKING_DIRECTORY}/data-pipeline
 chown -R "ubuntu:ubuntu" $${WORKING_DIRECTORY}
 
-bash $${WORKING_DIRECTORY}/worker/initialise-worker.sh '${aws_sqs_queue.work.url}' '${aws_s3_bucket.output.bucket}' $${WORKING_DIRECTORY}
+bash $${WORKING_DIRECTORY}/data-pipeline/worker/initialise-worker.sh '${aws_sqs_queue.work.url}' '${aws_s3_bucket.output.bucket}' $${WORKING_DIRECTORY}
 
 EOT
   )

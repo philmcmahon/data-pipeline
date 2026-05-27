@@ -17,8 +17,9 @@ export UV_CACHE_DIR="${WORKING_DIRECTORY}/.cache/uv"
 export HF_HOME="${WORKING_DIRECTORY}/.cache/huggingface"
 export WORK_DIR="${WORKING_DIRECTORY}/tmp"
 
-# Install uv
+# Install uv, make sure it is on the PATH
 curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
 
 cd "${TARGET_DIR}"
 
