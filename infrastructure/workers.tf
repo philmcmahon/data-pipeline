@@ -55,9 +55,9 @@ WORKING_DIRECTORY="/opt/dlami/nvme"
 mkdir -p "$${WORKING_DIRECTORY}/.cache/uv" "$${WORKING_DIRECTORY}/.cache/huggingface" "$${WORKING_DIRECTORY}/tmp"
 
 apt update
-apt install -y ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev
-# apt install -y ffmpeg
-snap install astral-uv
+apt install -y ffmpeg
+# apt install -y  libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev
+snap install astral-uv --classic
 
 git clone https://github.com/philmcmahon/data-pipeline.git $${WORKING_DIRECTORY}/data-pipeline
 chown -R "ubuntu:ubuntu" $${WORKING_DIRECTORY}

@@ -110,9 +110,10 @@ def transcribe_audio(file_path):
     model = get_whisperx_model()
     print(f"Transcribing audio file: {file_path}")
     result = model.transcribe(file_path, batch_size=8)
+    result_text = ("\n".join(seg["text"] for seg in result["segments"]))
     txt_path = file_path + ".txt"
     with open(txt_path, "w") as f:
-        f.write(result["vtt"])
+        f.write(result_text)
     print(f"Transcription complete: {txt_path}")
     return txt_path
 
@@ -168,7 +169,10 @@ def consume_queue(queue_url, output_bucket):
 
         messages = response.get("Messages", [])
         if not messages:
-            break
+            print("No messages in queue, waiting...")
+            # sleep
+            time.sleep(5)
+            continue
 
         sqs_message = messages[0]
         message = json.loads(sqs_message["Body"])
