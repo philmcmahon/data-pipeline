@@ -124,7 +124,10 @@ def get_document_converter():
 def get_openai_client():
     global _openai_client
     if _openai_client is None:
-        start_vllm_server("Qwen/Qwen3-4B")
+        start_vllm_server("Qwen/Qwen3-4B", [
+            "--max-model-len", "16384",
+            "--gpu-memory-utilization", "0.9",
+        ])
         from openai import OpenAI
         _openai_client = OpenAI(base_url=f"{VLLM_BASE_URL}/v1", api_key="unused")
     return _openai_client
