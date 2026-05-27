@@ -551,6 +551,7 @@ dependencies = [
 [package.optional-dependencies]
 worker = [
     { name = "docling" },
+    { name = "jinja2" },
     { name = "openai" },
     { name = "requests" },
     { name = "whisperx" },
@@ -561,6 +562,7 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.43.10" },
     { name = "botocore", extras = ["crt"], specifier = ">=1.43.10" },
     { name = "docling", marker = "extra == 'worker'" },
+    { name = "jinja2", marker = "extra == 'worker'" },
     { name = "openai", marker = "extra == 'worker'" },
     { name = "pika", specifier = ">=1.4.0" },
     { name = "requests", marker = "extra == 'worker'" },

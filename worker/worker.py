@@ -215,7 +215,7 @@ def consume_queue(queue_url, output_bucket):
         elif job_type == "prompt":
             s3_uri = f"s3://{bucket}/{key}"
             output_path = run_prompt(local_path, s3_uri, message["systemPrompt"])
-            s3_key = f"prompt/{os.path.splitext(original_filename)[0]}.csv"
+            s3_key = f"prompt/{os.path.splitext(original_filename)[0]}.json"
             upload_to_s3(s3, output_path, output_bucket, s3_key)
             os.remove(output_path)
 
