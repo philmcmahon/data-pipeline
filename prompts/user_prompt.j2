@@ -1,0 +1,35 @@
+You will see a document.
+
+You should identify whether this document is relevant to the investigation, and write some
+short notes describing why it is or is not relevant. Wherever the document is relevant you should
+include exact quotes from the relevant sections along with the line numbers.
+
+Your output should be a JSON file following the schema:
+
+```typescript
+type DocumentClassificationResponse = {
+relevant: true,
+quotes: string[],
+notes: string
+} | {
+relevant: false,
+notes: string
+}
+```
+
+For example:
+```json
+{
+    "notes" : "the document mentions donald trump directly"
+    "quotes": ["1-1: This is the message that Mark Rutte sent to Donald Trump]
+    "relevant" : true,
+  }
+```
+
+The output *must* be parseable as JSON. Do not add any text before or after the JSON.
+Here is the document:
+<document>
+<file_name>{{ file_name }}</file_name>
+<s3_uri>{{ s3_uri }}</s3_uri>
+<contents>{{ file_content }}</content>
+</document>

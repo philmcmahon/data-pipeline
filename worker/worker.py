@@ -5,11 +5,13 @@ import subprocess
 import time
 
 import boto3
+import jinja2
 import requests
 
 AWS_REGION = "eu-west-1"
 VLLM_BASE_URL = "http://127.0.0.1:8000"
 WORK_DIR = os.environ.get("WORK_DIR", "/tmp")
+PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
 
 _whisperx_model = None
 _document_converter = None
@@ -24,28 +26,13 @@ SYSTEM_PROMPT = (
 )
 
 
-def get_user_prompt(file_name, s3_uri, document):
-    return (
-        "You will see a document.\n"
-        "\n"
-        "You should identify whether this document is relevant to the investigation, and write some\n"
-        "short notes describing why it is or is not relevant.\n"
-        "\n"
-        "Your output should be a CSV following the schema:\n"
-        "\n"
-        '"input_file_name,input_file_s3_uri,matching_text,line_number_of_matching_text"\n'
-        "\n"
-        "For example:\n"
-        '"file.txt,s3://bucket//file.txt,matching_text,1"\n'
-        "\n"
-        "The output *must* be parseable as JSON. Do not add any text before or after the JSON.\n"
-        "Here is the document:\n"
-        "<document>\n"
-        f"<file_name>{file_name}</file_name>\n"
-        f"<s3_uri>{s3_uri}</s3_uri>\n"
-        f"<contents>{document}</contents>\n"
-        "</document>"
+def get_user_prompt(file_name, s3_uri, file_content):
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(PROMPTS_DIR),
+        autoescape=False,
     )
+    template = env.get_template("user_prompt.j2")
+    return template.render(file_name=file_name, s3_uri=s3_uri, file_content=file_content)
 
 
 def start_vllm_server(model, extra_args=None):
@@ -169,12 +156,13 @@ def run_prompt(file_path, s3_uri, system_prompt):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": get_user_prompt(os.path.basename(file_path), s3_uri, file_content)},
         ],
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
     )
-    csv_path = file_path + ".csv"
-    with open(csv_path, "w") as f:
+    json_path = file_path + ".json"
+    with open(json_path, "w") as f:
         f.write(response.choices[0].message.content)
-    print(f"Prompt complete: {csv_path}")
-    return csv_path
+    print(f"Prompt complete: {json_path}")
+    return json_path
 
 
 def upload_to_s3(s3_client, local_path, bucket, s3_key):
