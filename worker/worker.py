@@ -9,13 +9,14 @@ import requests
 
 AWS_REGION = "eu-west-1"
 VLLM_BASE_URL = "http://127.0.0.1:8000"
+WORK_DIR = os.environ.get("WORK_DIR", "/tmp")
 
 _whisperx_model = None
 _document_converter = None
 _vllm_process = None
 _openai_client = None
 
-PROMPT_SYSTEM = (
+SYSTEM_PROMPT = (
     "You are an investigative journalist. Your job is to identify sections of the "
     "file which match the user prompt. The output should be in CSV format, with 1 row "
     "per match. Each row should have the format "
@@ -49,7 +50,7 @@ def get_whisperx_model():
     if _whisperx_model is None:
         import whisperx
         _whisperx_model = whisperx.load_model(
-            "large-v2", "cuda", compute_type="float16"
+            "medium", "cuda", compute_type="float16"
         )
     return _whisperx_model
 
@@ -77,7 +78,7 @@ def get_document_converter():
                 params={
                     "model": "ibm-granite/granite-docling-258M",
                     "temperature": 0.0,
-                    "max_tokens": 8192,
+                    "max_tokens": 4096,
                     "skip_special_tokens": False,
                 },
                 timeout=90,
@@ -99,7 +100,7 @@ def get_document_converter():
 def get_openai_client():
     global _openai_client
     if _openai_client is None:
-        start_vllm_server("Qwen/Qwen3-8B")
+        start_vllm_server("Qwen/Qwen3-8B-Q4_K_M")
         from openai import OpenAI
         _openai_client = OpenAI(base_url=f"{VLLM_BASE_URL}/v1", api_key="unused")
     return _openai_client
@@ -134,9 +135,9 @@ def run_prompt(file_path, s3_uri, user_prompt):
         file_content = f.read()
 
     response = client.chat.completions.create(
-        model="Qwen/Qwen3-8B",
+        model="Qwen/Qwen3-8B-Q4_K_M",
         messages=[
-            {"role": "system", "content": PROMPT_SYSTEM},
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"File: {s3_uri}\n\n{file_content}\n\nPrompt: {user_prompt}"},
         ],
     )
@@ -161,6 +162,8 @@ def consume_queue(queue_url, output_bucket):
             QueueUrl=queue_url,
             MaxNumberOfMessages=1,
             WaitTimeSeconds=10,
+            # Allow 15 minutes for message to timeout
+            VisibilityTimeout=15 * 60
         )
 
         messages = response.get("Messages", [])
@@ -173,7 +176,8 @@ def consume_queue(queue_url, output_bucket):
         key = message["key"]
         job_type = message["jobType"]
         original_filename = os.path.basename(key)
-        local_path = os.path.join("/tmp", original_filename)
+        os.makedirs(WORK_DIR, exist_ok=True)
+        local_path = os.path.join(WORK_DIR, original_filename)
 
         s3.download_file(bucket, key, local_path)
         print(f"Downloaded: {local_path}")

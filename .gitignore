@@ -1,5 +1,6 @@
 passwords.txt
 .DS_Store
+__pycache__/
 *.tfstate
 *.tfstate.backup
 .terraform/

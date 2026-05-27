@@ -1,2 +1,143 @@
-# data-pipeline
-Repository for workshop at data harvest 2026 on rapidly analysing documents using the public cloud
+# Data Pipeline Workshop
+
+The aim of this workshop is to build a scalable pipeline to use to process large datasets. We'll focus on the following tasks:
+
+- OCR (extracting text from images)
+- Transcription
+- Running LLM prompts on a document
+
+As source data, we will use an Amazon S3 bucket containing:
+
+- podcasts/ - a selection of recent episodes from podcasts from a few different european countries
+- company_reports/ - company reports of the FTSE 350 companies from the london stock exchange
+
+The workshop has three parts:
+
+1.  Creating the cloud infrastructure we will use for the project (`infrastructure/`)
+
+- A queue, which we'll use to schedule jobs for our workers
+- A worker pool - computers to perform the OCR/Transcription/LLM operations. Known as an 'auto scaling group' in AWS.
+
+2.  Scheduling some work. See `populator/`.
+3.  Running the desired task on the work we have scheduled. See `worker/`.
+
+## Setup
+
+For this workshop, you will need access to AWS. Go to https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1
+and login using the credentials provided. Once you have logged in, go to here and download the file from S3. This file contains credentials to use for this workshop. Open the file in your text editor.
+
+Next, make sure you have the aws cli installed by following the instructions here https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+Finally, in a terminal window run `aws configure --profile workshop` and use the credentials you downloaded to configure the CLI. Set
+the default region name to `eu-west-1`. You can leave the default output format blank.
+
+To test that your credentials are working, run `aws s3 ls --profile workshop` - you should see a list of data harvest related S3 buckets.
+
+## Creating your pipeline
+
+To manage the cloud infrastructure we'll need for this workshop, we're using some software called Open Tofu. This allows us to
+define all the things we need in a single file, rather than having to click lots of buttons in the cloud console. To begin with,
+make sure you have installed open tofu by following the instructions here: https://opentofu.org/.
+
+Once open tofu is installed, we need to initialise the opentofu project we'll be using. Run `tofu init` inside the `infrastructure`
+directory:
+
+```
+cd infrastructure/
+tofu init
+```
+
+Next, take a look at `infrastructure/workers.tf` - this is the OpenTofu file that defines the infrastructure we'll need for the pipeline. There isn't time to learn the details of OpenTofu now, but you could read through the comments of the file to get an
+idea of what will be created in AWS.
+
+Change the projectName variable inside the `infrastructure/workers.tf` file file from 'phil-test' to something else. This ensures that you'll be able to tell apart cloud resources you've created from others doing the workshop.
+
+Once you have changed the project name, run `tofu apply` to create your infrastructure. OpenTofu will show a list of all the things it
+will do, type 'yes' to tell it to go ahead.
+
+Once OpenTofu has finished creating your infrastructure, you can go check it's there in the console:
+
+- SQS console:
+- S3 console:
+- Autoscaling group console:
+
+## Scheduling some work
+
+Now we've got our infrastructure, we need to put some messages on the queue containing the work we want done.
+
+Take a look at the contents of the source data S3 bucket and decide which files you want to work on. Initially it's best to pick something out of the `short_files` directory. Once you have identified a directory, note down the path to the files, e.g. `short_files/beatles_samples`
+
+Next, take a look at the `populator/` subdirectory. This contains the script we'll use to add messages to the queue. The basic behaviour
+of the script is:
+
+- List files in the S3 bucket
+- Add a reference to the file, together with a jobType and any extra necessay data to the queue.
+
+Whilst it's possible to write some code to auto detect the type of file and process it accordingly, to keep things simple we'll be
+telling the populator what job we want to run on the input files. Initially, we'll start with transcription and ocr.
+
+To run the populator you need a program called `uv` installed. Follow the instructions here https://docs.astral.sh/uv/getting-started/installation/ to install it.
+
+Once you have uv installed, run `uv sync` to install the dependencies needed by the populator script:
+
+```
+cd data-pipeline/
+uv sync
+```
+
+Now we can run the populator script:
+
+```
+uv run queue-populator [QUEUE_URL] [PATH] [JOB_TYPE]
+```
+
+You'll need to replace the arguments:
+
+- QUEUE_URL: Fetch it from the SQS console
+- PATH: path to the files in S3 you want to process
+- JOB_TYPE: either 'transcribe' or 'ocr'
+
+## Running the workers and checking the output
+
+Now we have some work in the queue, we need to start a worker. Go to the autoscaling console, find your worker autoscaling group
+and set the desired number of instances to 1. If you go to the 'instance management' tab you should see a new instance starting up.
+
+The worker has been pre-configured to install any necessary dependencies and start processing the queue. To see how it's getting on,
+we need to look at the output logs from the service. There are two ways of doing this, initially we'll just login to the machine using the AWS console.
+
+(Note that if you're using another cloud provider or don't want to lock in to AWS you can use SSH for this step, AWS tools are just easier in the workshop context)
+
+### Using AWS console
+
+Find your instance by going to the autoscaling group console, finding your autoscaling group, selecting the 'instance management' tab
+and then clicking on the instance id of your instance. This will open in a new tab. Click 'connect' and then on the next page 'connect'
+again.
+
+Once you are logged in, there are two files of interest. `/var/log/cloud-init-output.log` will show you everything that happened when
+the instance started up.
+
+`worker.log` contains all the output from the worker.py script. You can either `cat worker.log` to dump everything to the terminal, or run `tail -f worker.log` to follow along as it processes the files.
+
+If you'd prefer to use your own terminal rather than the browser then you can install the AWS CLI session manager plugin from
+[here](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) and then login
+using the instance id:
+
+```
+aws ssm start-session --profile workshop --target <id>
+sudo su ubuntu
+cd /home/ubuntu
+```
+
+## Analysing the output using an LLM
+
+Hopefully by this point you have some data in your output bucket. The next step is to feed this output into an LLM to do some analysis.
+
+Firstly, let's purge the queue of any leftover work. You can do this in the SQS console.
+
+Next, edit prompt.txt with to contain a description of the type of data you are looking for. See example_prompt.txt for insipration.
+
+Now, run the populator with your prompt along and the location of the output files. Note that this time you'll need to tell the populator to read from your output bucket
+
+```
+uv run queue-populator [QUEUE_URL] [PATH] prompt --bucket [OUTPUT_BUCKET]
+```
