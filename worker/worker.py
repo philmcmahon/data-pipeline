@@ -109,7 +109,7 @@ def get_openai_client():
 def transcribe_audio(file_path):
     model = get_whisperx_model()
     print(f"Transcribing audio file: {file_path}")
-    result = model.transcribe(file_path, batch_size=8)
+    result = model.transcribe(file_path, batch_size=8, translate=True)
     result_text = ("\n".join(seg["text"] for seg in result["segments"]))
     txt_path = file_path + ".txt"
     with open(txt_path, "w") as f:
