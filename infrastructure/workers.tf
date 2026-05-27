@@ -47,7 +47,6 @@ resource "aws_launch_template" "workers" {
   image_id      = "ami-0630945e30e7f21a6"
   instance_type = "g4dn.xlarge" # Roughly $0.50/hour
   user_data = base64encode(<<-EOT
-
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -57,11 +56,13 @@ mkdir -p "$${WORKING_DIRECTORY}/.cache/uv" "$${WORKING_DIRECTORY}/.cache/hugging
 
 apt update
 apt install -y ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev
+# apt install -y ffmpeg
+snap install astral-uv
 
 git clone https://github.com/philmcmahon/data-pipeline.git $${WORKING_DIRECTORY}/data-pipeline
 chown -R "ubuntu:ubuntu" $${WORKING_DIRECTORY}
 
-bash $${WORKING_DIRECTORY}/data-pipeline/worker/initialise-worker.sh '${aws_sqs_queue.work.url}' '${aws_s3_bucket.output.bucket}' $${WORKING_DIRECTORY}
+sudo -u ubuntu bash $${WORKING_DIRECTORY}/data-pipeline/worker/initialise-worker.sh '${aws_sqs_queue.work.url}' '${aws_s3_bucket.output.bucket}' $${WORKING_DIRECTORY}
 
 EOT
   )
