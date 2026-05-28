@@ -1,6 +1,15 @@
 _whisperx_model = None
 
 
+def unload_whisperx_model():
+    global _whisperx_model
+    if _whisperx_model is not None:
+        print("Unloading whisperx model...")
+        _whisperx_model = None
+        import torch
+        torch.cuda.empty_cache()
+
+
 def get_whisperx_model():
     global _whisperx_model
     if _whisperx_model is None:

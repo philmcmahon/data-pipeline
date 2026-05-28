@@ -12,7 +12,8 @@ import boto3
 
 from worker.ocr import ocr_document, ocr_document_ocrmypdf
 from worker.prompt import run_prompt
-from worker.transcribe import transcribe_audio
+from worker.transcribe import transcribe_audio, unload_whisperx_model
+from worker.vllm import stop_vllm_server
 
 AWS_REGION = "eu-west-1"
 WORK_DIR = os.environ.get("WORK_DIR", "/tmp")
@@ -38,7 +39,8 @@ def consume_queue(queue_url, output_bucket):
         messages = response.get("Messages", [])
         if not messages:
             print("No messages in queue, waiting...")
-            # sleep
+            unload_whisperx_model()
+            stop_vllm_server()
             time.sleep(5)
             continue
 
