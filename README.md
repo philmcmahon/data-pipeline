@@ -23,23 +23,23 @@ The workshop has three parts:
 
 ## Setup
 
-For this workshop, you will need access to AWS. Go to https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1
-and login using the credentials provided. Once you have logged in, go to here and download the file from S3. This file contains credentials to use for this workshop. Open the file in your text editor.
+For this workshop, you will need access to AWS. Go to https://708599814125.signin.aws.amazon.com/console/?region=eu-west-1
+and login using the credentials provided. Once you have logged in, in a terminal window run the command:
 
-Next, make sure you have the aws cli installed by following the instructions here https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+```bash
+aws login --profile dataharvest --region eu-west-1
+```
 
-Finally, in a terminal window run `aws configure --profile workshop` and use the credentials you downloaded to configure the CLI. Set
-the default region name to `eu-west-1`. You can leave the default output format blank.
+It should pop open a browser. Select the account you just signed into.
 
-To test that your credentials are working, run `aws s3 ls --profile workshop` - you should see a list of data harvest related S3 buckets.
+To test that your credentials are working, run `aws s3 ls --profile dataharvest` - you should see a list of data harvest related S3 buckets.
 
 ## Creating your pipeline
 
 To manage the cloud infrastructure we'll need for this workshop, we're using some software called Open Tofu. This allows us to
-define all the things we need in a single file, rather than having to click lots of buttons in the cloud console. To begin with,
-make sure you have installed open tofu by following the instructions here: https://opentofu.org/.
+define all the things we need in a single file, rather than having to click lots of buttons in the cloud console. To begin with,make sure you have installed open tofu by following the instructions here: https://opentofu.org/docs/intro/install/.
 
-Once open tofu is installed, we need to initialise the opentofu project we'll be using. Run `tofu init` inside the `infrastructure`
+Once opentofu is installed, we need to initialise the opentofu project we'll be using. Run `tofu init` inside the `infrastructure`
 directory:
 
 ```
@@ -47,8 +47,7 @@ cd infrastructure/
 tofu init
 ```
 
-Next, take a look at `infrastructure/workers.tf` - this is the OpenTofu file that defines the infrastructure we'll need for the pipeline. There isn't time to learn the details of OpenTofu now, but you could read through the comments of the file to get an
-idea of what will be created in AWS.
+Next, take a look at `infrastructure/workers.tf` - this is the OpenTofu file that defines the infrastructure we'll need for the pipeline. There isn't time to learn the details of OpenTofu now, but you could read through the comments of the file to get an idea of what will be created in AWS.
 
 Change the projectName variable inside the `infrastructure/workers.tf` file file from 'phil-test' to something else. This ensures that you'll be able to tell apart cloud resources you've created from others doing the workshop.
 

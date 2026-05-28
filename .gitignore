@@ -5,3 +5,4 @@ __pycache__/
 *.tfstate.backup
 .terraform/
 .terraform.lock.hcl
+private/
