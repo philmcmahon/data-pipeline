@@ -96,7 +96,7 @@ uv sync
 Now we can run the populator script:
 
 ```bash
-uv run queue-populator [QUEUE_URL] [PATH] [JOB_TYPE]
+uv run populator [QUEUE_URL] [PATH] [JOB_TYPE]
 ```
 
 You'll need to replace the arguments:
@@ -163,7 +163,7 @@ Next, edit `prompts/system_prompt.txt` to contain a description of the type of d
 Now, run the populator with your prompt along and the location of the output files. Note that this time you'll need to tell the populator to read from your output bucket
 
 ```bash
-uv run queue-populator [QUEUE_URL] [PATH] prompt --bucket [OUTPUT_BUCKET] --system-prompt-file `prompts/system_prompt.txt`
+uv run populator [QUEUE_URL] [PATH] prompt --bucket [OUTPUT_BUCKET] --system-prompt-file `prompts/system_prompt.txt`
 ```
 
 It's worth logging onto the machine again to check it's doing as you expect. Eventually you should start seeing files appear

@@ -21,7 +21,7 @@ worker = [
 ]
 
 [project.scripts]
-queue-populator = "populator.populator:main"
+populator = "populator.populator:main"
 worker = "worker.worker:main"
 collector = "collector.collector:main"
 
