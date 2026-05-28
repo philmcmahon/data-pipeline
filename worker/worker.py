@@ -1,161 +1,16 @@
 import argparse
 import json
 import os
-import subprocess
 import time
 
 import boto3
-import jinja2
-import requests
+
+from ocr import ocr_document
+from prompt import run_prompt
+from transcribe import transcribe_audio
 
 AWS_REGION = "eu-west-1"
-VLLM_BASE_URL = "http://127.0.0.1:8000"
 WORK_DIR = os.environ.get("WORK_DIR", "/tmp")
-PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
-
-_whisperx_model = None
-_document_converter = None
-_vllm_process = None
-_openai_client = None
-
-def get_user_prompt(file_name, s3_uri, file_content):
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(PROMPTS_DIR),
-        autoescape=False,
-    )
-    template = env.get_template("user_prompt.j2")
-    return template.render(file_name=file_name, s3_uri=s3_uri, file_content=file_content)
-
-
-def start_vllm_server(model, extra_args=None):
-    global _vllm_process
-    cmd = ["vllm", "serve", model, "--host", "127.0.0.1", "--port", "8000"]
-    if extra_args:
-        cmd.extend(extra_args)
-    print(f"Starting vllm server: {' '.join(cmd)}")
-    _vllm_process = subprocess.Popen(cmd)
-
-    # Wait for server to be ready
-    for _ in range(120):
-        try:
-            r = requests.get(f"{VLLM_BASE_URL}/v1/models", timeout=2)
-            if r.status_code == 200:
-                print("vllm server is ready")
-                return
-        except requests.ConnectionError:
-            pass
-        time.sleep(5)
-    raise RuntimeError("vllm server failed to start within timeout")
-
-
-def get_whisperx_model():
-    global _whisperx_model
-    if _whisperx_model is None:
-        import whisperx
-        _whisperx_model = whisperx.load_model(
-            "medium", "cuda", compute_type="float16"
-        )
-    return _whisperx_model
-
-
-def get_document_converter():
-    global _document_converter
-    if _document_converter is None:
-        start_vllm_server("ibm-granite/granite-docling-258M", [
-            "--max-num-seqs", "512",
-            "--max-num-batched-tokens", "8192",
-            "--enable-chunked-prefill",
-            "--gpu-memory-utilization", "0.9",
-        ])
-        from docling.datamodel.base_models import InputFormat
-        from docling.datamodel.pipeline_options import VlmConvertOptions, VlmPipelineOptions
-        from docling.datamodel.vlm_engine_options import ApiVlmEngineOptions, VlmEngineType
-        from docling.document_converter import DocumentConverter, PdfFormatOption
-        from docling.pipeline.vlm_pipeline import VlmPipeline
-
-        vlm_options = VlmConvertOptions.from_preset(
-            "granite_docling",
-            engine_options=ApiVlmEngineOptions(
-                runtime_type=VlmEngineType.API,
-                url=f"{VLLM_BASE_URL}/v1/chat/completions",
-                params={
-                    "model": "ibm-granite/granite-docling-258M",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                    "skip_special_tokens": False,
-                },
-                timeout=90,
-            ),
-        )
-        pipeline_options = VlmPipelineOptions(
-            vlm_options=vlm_options, enable_remote_services=True
-        )
-        _document_converter = DocumentConverter(
-            format_options={
-                InputFormat.PDF: PdfFormatOption(
-                    pipeline_options=pipeline_options, pipeline_cls=VlmPipeline
-                )
-            }
-        )
-    return _document_converter
-
-
-def get_openai_client():
-    global _openai_client
-    if _openai_client is None:
-        start_vllm_server("Qwen/Qwen3-4B", [
-            "--max-model-len", "16384",
-            "--gpu-memory-utilization", "0.9",
-        ])
-        from openai import OpenAI
-        _openai_client = OpenAI(base_url=f"{VLLM_BASE_URL}/v1", api_key="unused")
-    return _openai_client
-
-
-def transcribe_audio(file_path):
-    model = get_whisperx_model()
-    print(f"Transcribing audio file: {file_path}")
-    # You can remove the task parameter here to prevent translation to english
-    result = model.transcribe(file_path, batch_size=8, task="translate")
-    result_text = ("\n".join(seg["text"] for seg in result["segments"]))
-    txt_path = file_path + ".txt"
-    with open(txt_path, "w") as f:
-        f.write(result_text)
-    print(f"Transcription complete: {txt_path}")
-    return txt_path
-
-
-def ocr_document(file_path):
-    converter = get_document_converter()
-    print(f"Performing OCR on document: {file_path}")
-    result = converter.convert(file_path)
-    md_path = file_path + ".md"
-    with open(md_path, "w") as f:
-        f.write(result.document.export_to_markdown())
-    print(f"OCR complete: {md_path}")
-    return md_path
-
-
-def run_prompt(file_path, s3_uri, system_prompt):
-    client = get_openai_client()
-    print(f"Running prompt on file: {file_path}")
-    with open(file_path) as f:
-        file_content = f.read()
-
-    response = client.chat.completions.create(
-        model="Qwen/Qwen3-4B",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": get_user_prompt(os.path.basename(file_path), s3_uri, file_content)},
-        ],
-        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
-    )
-    json_path = file_path + ".json"
-    with open(json_path, "w") as f:
-        f.write(response.choices[0].message.content)
-    print(f"Prompt complete: {json_path}")
-    return json_path
-
 
 def upload_to_s3(s3_client, local_path, bucket, s3_key):
     s3_client.upload_file(local_path, bucket, s3_key)
