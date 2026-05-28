@@ -9,7 +9,7 @@ def get_document_converter():
         start_vllm_server("ibm-granite/granite-docling-258M", [
             "--served-model-name", "ibm-granite/granite-docling-258M",
             "--max-num-seqs", "512",
-            "--max-num-batched-tokens", "65536",
+            "--max-num-batched-tokens", "32768",
             "--enable-chunked-prefill",
             "--enable-prefix-caching",
             "--gpu-memory-utilization", "0.9",
