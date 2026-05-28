@@ -1,4 +1,7 @@
 from worker.vllm import start_vllm_server, VLLM_BASE_URL
+import ocrmypdf
+from ocrmypdf import OcrOptions
+import subprocess
 
 _document_converter = None
 
@@ -57,3 +60,19 @@ def ocr_document(file_path):
         f.write(result.document.export_to_markdown())
     print(f"OCR complete: {md_path}")
     return md_path
+
+
+def ocr_document_ocrmypdf(file_path):
+    options = OcrOptions(
+        input_file=file_path,
+        output_file=f'{file_path}.pdf',
+        deskew=True,
+        languages=['eng'],
+        skip_text=True
+    )
+    print("Running ocr with ocrmypdf")
+    ocrmypdf.ocr(options)
+    # use pdftotext to extract text file, return text file
+    text_output_path = file_path + ".txt"
+    subprocess.run(["pdftotext", options.output_file, text_output_path, "-layout"], check=True)
+    return text_output_path

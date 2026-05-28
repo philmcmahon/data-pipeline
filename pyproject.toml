@@ -17,6 +17,7 @@ worker = [
     "jinja2",
     "openai",
     "requests",
+    "ocrmypdf"
 ]
 
 [project.scripts]

@@ -10,7 +10,7 @@ sys.stderr.reconfigure(line_buffering=True)
 
 import boto3
 
-from worker.ocr import ocr_document
+from worker.ocr import ocr_document, ocr_document_ocrmypdf
 from worker.prompt import run_prompt
 from worker.transcribe import transcribe_audio
 
@@ -60,7 +60,7 @@ def consume_queue(queue_url, output_bucket):
             upload_to_s3(s3, output_path, output_bucket, s3_key)
             os.remove(output_path)
         elif job_type == "ocr":
-            output_path = ocr_document(local_path)
+            output_path = ocr_document_ocrmypdf(local_path)
             s3_key = f"ocr/{os.path.splitext(original_filename)[0]}.md"
             upload_to_s3(s3, output_path, output_bucket, s3_key)
             os.remove(output_path)
