@@ -9,8 +9,9 @@ def get_document_converter():
         start_vllm_server("ibm-granite/granite-docling-258M", [
             "--served-model-name", "ibm-granite/granite-docling-258M",
             "--max-num-seqs", "512",
-            "--max-num-batched-tokens", "8192",
+            "--max-num-batched-tokens", "65536",
             "--enable-chunked-prefill",
+            "--enable-prefix-caching",
             "--gpu-memory-utilization", "0.9",
         ])
         from docling.datamodel.base_models import InputFormat
