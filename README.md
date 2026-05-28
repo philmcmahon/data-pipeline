@@ -23,7 +23,16 @@ The workshop has three parts:
 
 ## Setup
 
-For this workshop, you will need access to AWS. Go to https://708599814125.signin.aws.amazon.com/console/?region=eu-west-1
+For this workshop, you will need access to AWS. Firstly, make sure you have installed the aws cli. You can check if it's installed by running:
+
+```bash
+aws --version
+
+```
+
+If you get some output similar to `aws-cli/2.34.53 ...` then it is installed. To install it, follow the guide here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+Once you have the CLI installed, go to https://708599814125.signin.aws.amazon.com/console/?region=eu-west-1
 and login using the credentials provided. Once you have logged in, in a terminal window run the command:
 
 ```bash
@@ -42,7 +51,7 @@ define all the things we need in a single file, rather than having to click lots
 Once opentofu is installed, we need to initialise the opentofu project we'll be using. Run `tofu init` inside the `infrastructure`
 directory:
 
-```
+```bash
 cd infrastructure/
 tofu init
 ```
@@ -56,15 +65,15 @@ will do, type 'yes' to tell it to go ahead.
 
 Once OpenTofu has finished creating your infrastructure, you can go check it's there in the console:
 
-- SQS console:
-- S3 console:
-- Autoscaling group console:
+- SQS console: https://eu-west-1.console.aws.amazon.com/sqs/v3/home?region=eu-west-1#/queues
+- S3 console: https://console.aws.amazon.com/s3/home?region=eu-west-1#
+- Autoscaling group console: https://eu-west-1.console.aws.amazon.com/ec2/home?region=eu-west-1#AutoScalingGroups:
 
 ## Scheduling some work
 
 Now we've got our infrastructure, we need to put some messages on the queue containing the work we want done.
 
-Take a look at the contents of the source data S3 bucket and decide which files you want to work on. Initially it's best to pick something out of the `short_files` directory. Once you have identified a directory, note down the path to the files, e.g. `short_files/beatles_samples`
+Take a look at the contents of the source data S3 bucket and decide which files you want to work on. Initially it's best to pick something out of the `short_files` directory. Once you have identified a directory, note down the path to the files, e.g. `podcast_samples/`
 
 Next, take a look at the `populator/` subdirectory. This contains the script we'll use to add messages to the queue. The basic behaviour
 of the script is:

@@ -10,17 +10,21 @@ data "aws_subnets" "vpc" {
   }
 }
 
+data "aws_ec2_managed_prefix_list" "ec2_instance_connect" {
+  name = "com.amazonaws.eu-west-1.ec2-instance-connect"
+}
+
 resource "aws_security_group" "workers" {
   name   = "${var.projectName}-workers-sg"
   vpc_id = "vpc-0e766c22eaa6f8c08"
 
-# SSH access - not needed in AWS
-#   ingress {
-#     from_port   = 22
-#     to_port     = 22
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
+# SSH access - only allowed from ec2 instance connect
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.ec2_instance_connect.id]
+  }
 
   egress {
     from_port   = 443
