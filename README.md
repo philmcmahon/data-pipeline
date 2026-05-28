@@ -80,14 +80,14 @@ To run the populator you need a program called `uv` installed. Follow the instru
 
 Once you have uv installed, run `uv sync` to install the dependencies needed by the populator script:
 
-```
+```bash
 cd data-pipeline/
 uv sync
 ```
 
 Now we can run the populator script:
 
-```
+```bash
 uv run queue-populator [QUEUE_URL] [PATH] [JOB_TYPE]
 ```
 
@@ -113,8 +113,22 @@ Find your instance by going to the autoscaling group console, finding your autos
 and then clicking on the instance id of your instance. This will open in a new tab. Click 'connect' and then on the next page 'connect'
 again.
 
-Once you are logged in, there are two files of interest. `/var/log/cloud-init-output.log` will show you everything that happened when
-the instance started up.
+Once you are logged in, there are two files of interest. `/var/log/cloud-init-output.log` will show you everything that happened when the instance started up. At the end of the startup process it starts the worker. From then on, logs will appear in
+`/opt/dlami/nvme/worker.log`.
+
+To see what's in these files, you can use `cat -f` to follow along whilst stuff is happening:
+
+```bash
+tail -f /var/log/cloud-init-output.log
+tail -f /opt/dlami/nvme/worker.log
+```
+
+Or you can use `cat` to dump the whole file to the screen:
+
+```bash
+cat /var/log/cloud-init-output.log
+cat /opt/dlami/nvme/worker.log
+```
 
 `worker.log` contains all the output from the worker.py script. You can either `cat worker.log` to dump everything to the terminal, or run `tail -f worker.log` to follow along as it processes the files.
 
@@ -122,7 +136,7 @@ If you'd prefer to use your own terminal rather than the browser then you can in
 [here](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) and then login
 using the instance id:
 
-```
+```bash
 aws ssm start-session --profile workshop --target <id>
 sudo su ubuntu
 cd /home/ubuntu
@@ -134,11 +148,22 @@ Hopefully by this point you have some data in your output bucket. The next step 
 
 Firstly, let's purge the queue of any leftover work. You can do this in the SQS console.
 
-Next, edit prompt.txt with to contain a description of the type of data you are looking for. See example_prompt.txt for insipration.
+Next, edit `prompts/system_prompt.txt` to contain a description of the type of data you are looking for. See `example_prompt.txt` for insipration.
 
 Now, run the populator with your prompt along and the location of the output files. Note that this time you'll need to tell the populator to read from your output bucket
 
-```
-uv run queue-populator [QUEUE_URL] [PATH] prompt --bucket [OUTPUT_BUCKET]
+```bash
+uv run queue-populator [QUEUE_URL] [PATH] prompt --bucket [OUTPUT_BUCKET] --system-prompt-file `prompts/system_prompt.txt`
 ```
 
+It's worth logging onto the machine again to check it's doing as you expect. Eventually you should start seeing files appear
+in the S3 console at the PATH you provided. You should be able to download and take a look at the files.
+
+## Gathering output into a single file
+
+It would be easier to look at the output data if we had it all in one place. There is a script 'collector' provided which will
+download all the output prompt files and combine them into a single CSV (spreadsheet) file. You can run it like this:
+
+```
+uv run collector [OUTPUT_BUCKET] prompt/
+```
