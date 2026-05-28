@@ -16,13 +16,15 @@ def start_vllm_server(model, extra_args=None):
     print(f"Starting vllm server: {' '.join(cmd)}")
     _vllm_process = subprocess.Popen(cmd)
 
-    # Wait for server to be ready
+    # Wait for server to be ready and model to be loaded
     for _ in range(120):
         try:
             r = requests.get(f"{VLLM_BASE_URL}/v1/models", timeout=2)
             if r.status_code == 200:
-                print("vllm server is ready")
-                return
+                models = r.json().get("data", [])
+                if any(m.get("id") == model for m in models):
+                    print("vllm server is ready")
+                    return
         except requests.ConnectionError:
             pass
         time.sleep(5)
