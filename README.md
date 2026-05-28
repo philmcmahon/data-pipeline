@@ -81,8 +81,7 @@ of the script is:
 - List files in the S3 bucket
 - Add a reference to the file, together with a jobType and any extra necessay data to the queue.
 
-Whilst it's possible to write some code to auto detect the type of file and process it accordingly, to keep things simple we'll be
-telling the populator what job we want to run on the input files. Initially, we'll start with transcription and ocr.
+Whilst it's possible to write some code to auto detect the type of file and process it accordingly, to keep things simple we'll be telling the populator what job we want to run on the input files. Initially, we'll start with transcription.
 
 To run the populator you need a program called `uv` installed. Follow the instructions here https://docs.astral.sh/uv/getting-started/installation/ to install it.
 
@@ -110,16 +109,13 @@ You'll need to replace the arguments:
 Now we have some work in the queue, we need to start a worker. Go to the autoscaling console, find your worker autoscaling group
 and set the desired number of instances to 1. If you go to the 'instance management' tab you should see a new instance starting up.
 
-The worker has been pre-configured to install any necessary dependencies and start processing the queue. To see how it's getting on,
-we need to look at the output logs from the service. There are two ways of doing this, initially we'll just login to the machine using the AWS console.
+The worker has been pre-configured to install any necessary dependencies and start processing the queue. To see what it is doing
+we need to look at the output logs from the service. There are various ways of doing this, for now we'll just login to the machine using the AWS console.
 
 (Note that if you're using another cloud provider or don't want to lock in to AWS you can use SSH for this step, AWS tools are just easier in the workshop context)
 
-### Using AWS console
-
 Find your instance by going to the autoscaling group console, finding your autoscaling group, selecting the 'instance management' tab
-and then clicking on the instance id of your instance. This will open in a new tab. Click 'connect' and then on the next page 'connect'
-again.
+and then clicking on the instance id of your instance. This will open in a new tab. Click 'connect' in the top right and then on the next page 'connect' in the bottom right.
 
 Once you are logged in, there are two files of interest. `/var/log/cloud-init-output.log` will show you everything that happened when the instance started up. At the end of the startup process it starts the worker. From then on, logs will appear in
 `/opt/dlami/nvme/worker.log`.
@@ -179,3 +175,9 @@ uv run collector [OUTPUT_BUCKET] prompt/
 ```
 
 You should be left with a CSV file you can open in a spreadsheet editor.
+
+## Scaling up
+
+If time, we can try processing a larger amount of data (e.g. company_reports folder). Use the populator to add the jobs
+to the queue, and then set the desired instances of the autoscaling group to 3. You now have 3 workers processing the
+work simultaneously, hooray!
