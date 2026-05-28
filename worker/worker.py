@@ -5,9 +5,9 @@ import time
 
 import boto3
 
-from ocr import ocr_document
-from prompt import run_prompt
-from transcribe import transcribe_audio
+from worker.ocr import ocr_document
+from worker.prompt import run_prompt
+from worker.transcribe import transcribe_audio
 
 AWS_REGION = "eu-west-1"
 WORK_DIR = os.environ.get("WORK_DIR", "/tmp")

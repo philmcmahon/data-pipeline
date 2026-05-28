@@ -2,7 +2,7 @@ import os
 
 import jinja2
 
-from vllm import start_vllm_server, VLLM_BASE_URL
+from worker.vllm import start_vllm_server, VLLM_BASE_URL
 
 PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
 

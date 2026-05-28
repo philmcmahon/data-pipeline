@@ -1,4 +1,4 @@
-from vllm import start_vllm_server, VLLM_BASE_URL
+from worker.vllm import start_vllm_server, VLLM_BASE_URL
 
 _document_converter = None
 
