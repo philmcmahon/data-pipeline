@@ -1,7 +1,12 @@
 import argparse
 import json
 import os
+import sys
 import time
+
+# Ensure all print output is flushed immediately
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
 
 import boto3
 
