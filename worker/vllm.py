@@ -1,0 +1,29 @@
+import subprocess
+import time
+
+import requests
+
+VLLM_BASE_URL = "http://127.0.0.1:8000"
+
+_vllm_process = None
+
+
+def start_vllm_server(model, extra_args=None):
+    global _vllm_process
+    cmd = ["vllm", "serve", model, "--host", "127.0.0.1", "--port", "8000"]
+    if extra_args:
+        cmd.extend(extra_args)
+    print(f"Starting vllm server: {' '.join(cmd)}")
+    _vllm_process = subprocess.Popen(cmd)
+
+    # Wait for server to be ready
+    for _ in range(120):
+        try:
+            r = requests.get(f"{VLLM_BASE_URL}/v1/models", timeout=2)
+            if r.status_code == 200:
+                print("vllm server is ready")
+                return
+        except requests.ConnectionError:
+            pass
+        time.sleep(5)
+    raise RuntimeError("vllm server failed to start within timeout")
