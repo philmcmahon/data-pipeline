@@ -31,6 +31,7 @@ def get_document_converter():
                     "skip_special_tokens": False,
                 },
                 timeout=90,
+                concurrency=16,
             ),
         )
         pipeline_options = VlmPipelineOptions(
