@@ -24,6 +24,8 @@ def upload_to_s3(s3_client, local_path, bucket, s3_key):
 
 
 def consume_queue(queue_url, output_bucket):
+    # Polls SQS forever: grabs a job, processes the file, uploads the result.
+    # When idle, unloads GPU models to free memory for the next job type.
     s3 = boto3.client("s3", region_name=AWS_REGION)
     sqs = boto3.client("sqs", region_name=AWS_REGION)
 

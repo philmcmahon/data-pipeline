@@ -10,6 +10,8 @@ _openai_client = None
 
 
 def get_user_prompt(file_name, s3_uri, file_content):
+    # Renders a Jinja2 template (prompts/user_prompt.j2) that wraps the file's text
+    # content into a structured prompt the LLM can process.
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(PROMPTS_DIR),
         autoescape=False,
@@ -19,6 +21,8 @@ def get_user_prompt(file_name, s3_uri, file_content):
 
 
 def get_openai_client():
+    # Spins up a local Qwen3 LLM via vLLM and returns an OpenAI-compatible client.
+    # The API key is "unused" because the model runs locally, not via OpenAI.
     global _openai_client
     if _openai_client is None:
         start_vllm_server("Qwen/Qwen3-4B", [
@@ -31,6 +35,7 @@ def get_openai_client():
 
 
 def run_prompt(file_path, s3_uri, system_prompt):
+    # Sends a file's text to the local LLM with a system prompt, saves the response as JSON.
     client = get_openai_client()
     print(f"Running prompt on file: {file_path}")
     with open(file_path) as f:

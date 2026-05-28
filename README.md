@@ -150,6 +150,8 @@ sudo su ubuntu
 cd /home/ubuntu
 ```
 
+If you'd like to understand the worker better, note that all the files related to the worker are installed in the folder `/opt/dlami/nvme` - this location is useful as it is on a faster hard disk that comes with AWS's GPU instances. The startup script for the worker can be seen in theworker.tf opentofu file.
+
 ## Analysing the output using an LLM
 
 Hopefully by this point you have some data in your output bucket. The next step is to feed this output into an LLM to do some analysis.
@@ -175,3 +177,5 @@ download all the output prompt files and combine them into a single CSV (spreads
 ```
 uv run collector [OUTPUT_BUCKET] prompt/
 ```
+
+You should be left with a CSV file you can open in a spreadsheet editor.

@@ -9,6 +9,7 @@ _vllm_process = None
 
 
 def stop_vllm_server():
+    # Gracefully shuts down the vLLM server process; force-kills if it doesn't stop in 30s.
     global _vllm_process
     if _vllm_process is not None:
         print("Stopping existing vllm server...")
@@ -22,6 +23,8 @@ def stop_vllm_server():
 
 
 def start_vllm_server(model, extra_args=None):
+    # Launches a local vLLM server for the given model and waits up to ~10 min
+    # for it to be ready. Stops any previously running server first.
     global _vllm_process
     stop_vllm_server()
     cmd = ["vllm", "serve", model, "--host", "127.0.0.1", "--port", "8000"]

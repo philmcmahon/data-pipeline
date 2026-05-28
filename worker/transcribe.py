@@ -2,6 +2,8 @@ _whisperx_model = None
 
 
 def unload_whisperx_model():
+    # Frees GPU memory by discarding the speech model — needed before loading
+    # a different model (e.g. OCR or LLM) on the same GPU.
     global _whisperx_model
     if _whisperx_model is not None:
         print("Unloading whisperx model...")
@@ -11,6 +13,7 @@ def unload_whisperx_model():
 
 
 def get_whisperx_model():
+    # Lazy-loads the WhisperX "medium" model onto the GPU; reused across files.
     global _whisperx_model
     if _whisperx_model is None:
         import whisperx
@@ -21,6 +24,8 @@ def get_whisperx_model():
 
 
 def transcribe_audio(file_path):
+    # Transcribes audio and translates it to English using WhisperX.
+    # Remove task="translate" in model.transcribe() to keep the original language.
     model = get_whisperx_model()
     print(f"Transcribing audio file: {file_path}")
     # You can remove the task parameter here to prevent translation to english

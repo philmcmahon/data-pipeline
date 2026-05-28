@@ -7,6 +7,8 @@ _document_converter = None
 
 
 def get_document_converter():
+    # Lazy-loads an AI-powered OCR model (Granite Docling) via a local vLLM server.
+    # Only starts the server on first call; reuses it for subsequent documents.
     global _document_converter
     if _document_converter is None:
         start_vllm_server("ibm-granite/granite-docling-258M", [
@@ -52,6 +54,7 @@ def get_document_converter():
 
 
 def ocr_document(file_path):
+    # Uses the AI document converter to extract text from a PDF (higher quality, slower).
     converter = get_document_converter()
     print(f"Performing OCR on document: {file_path}")
     result = converter.convert(file_path)
@@ -63,6 +66,8 @@ def ocr_document(file_path):
 
 
 def ocr_document_ocrmypdf(file_path):
+    # Uses traditional OCR (Tesseract via ocrmypdf), then extracts text with pdftotext.
+    # Faster and lighter than the AI approach; skip_text avoids re-OCRing already-digital pages.
     options = OcrOptions(
         input_file=file_path,
         output_file=f'{file_path}.pdf',
