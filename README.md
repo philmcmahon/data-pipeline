@@ -116,7 +116,7 @@ again.
 Once you are logged in, there are two files of interest. `/var/log/cloud-init-output.log` will show you everything that happened when the instance started up. At the end of the startup process it starts the worker. From then on, logs will appear in
 `/opt/dlami/nvme/worker.log`.
 
-To see what's in these files, you can use `cat -f` to follow along whilst stuff is happening:
+To see what's in these files, you can use `tail -f` to follow along whilst stuff is happening:
 
 ```bash
 tail -f /var/log/cloud-init-output.log
