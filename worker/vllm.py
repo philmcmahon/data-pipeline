@@ -39,6 +39,7 @@ def start_vllm_server(model, extra_args=None):
             r = requests.get(f"{VLLM_BASE_URL}/v1/models", timeout=2)
             if r.status_code == 200:
                 models = r.json().get("data", [])
+                # Make sure that the model we want is ready (not just the server, which might have a different model loaded)
                 if any(m.get("id") == model for m in models):
                     print("vllm server is ready")
                     return

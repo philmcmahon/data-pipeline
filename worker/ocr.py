@@ -5,15 +5,18 @@ import subprocess
 
 _document_converter = None
 
+DOCLING_MODEL = "ibm-granite/granite-docling-258M"
+
 
 def get_document_converter():
     # Lazy-loads an AI-powered OCR model (Granite Docling) via a local vLLM server.
     # Only starts the server on first call; reuses it for subsequent documents.
     global _document_converter
     if _document_converter is None:
-        start_vllm_server("ibm-granite/granite-docling-258M", [
-            "--served-model-name", "ibm-granite/granite-docling-258M",
+        start_vllm_server(DOCLING_MODEL, [
+            "--served-model-name", DOCLING_MODEL,
             "--max-num-seqs", "512",
+            # This is about the maximum context length given we only have 16GB of GPU memory
             "--max-num-batched-tokens", "16384",
             "--enable-chunked-prefill",
             "--enable-prefix-caching",
@@ -31,7 +34,7 @@ def get_document_converter():
                 runtime_type=VlmEngineType.API,
                 url=f"{VLLM_BASE_URL}/v1/chat/completions",
                 params={
-                    "model": "ibm-granite/granite-docling-258M",
+                    "model": DOCLING_MODEL,
                     "temperature": 0.0,
                     "max_tokens": 4096,
                     "skip_special_tokens": False,
@@ -78,7 +81,7 @@ def ocr_document_ocrmypdf(file_path):
     print("Running ocr with ocrmypdf")
     ocrmypdf.ocr(options)
     print("finished ocrmypdf, converting to text")
-    # use pdftotext to extract text file, return text file
+    # use pdftotext to extract text file
     text_output_path = file_path + ".txt"
     subprocess.run(["pdftotext", options.output_file, text_output_path, "-layout"], check=True)
     print(f"OCR complete: {text_output_path}")

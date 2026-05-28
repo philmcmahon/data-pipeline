@@ -35,13 +35,13 @@ resource "aws_s3_bucket" "output" {
 
 # The launch template defines what type of workers we want and what they should do on startup.
 
-# The image_id determines the operating system installed on the workers. In this case we're using the AWS Deep Learning AMI
+# The image_id determines the operating system  and software installed on the workers. In this case we're using the AWS Deep Learning AMI
 # to save time installing GPU drivers (https://docs.aws.amazon.com/dlami/latest/devguide/overview-base.html)
 
 # The instance_type determines the hardware (and cost per second) of the machine we want to run. In this case we're using
 # the cheapest GPU instance provided by amazon, which has 16GB of video memory
 
-# The user_data is the script we want to run when we startup the machine. See worker/setup.sh
+# The user_data is the script that gets run when we startup the machine. 
 resource "aws_launch_template" "workers" {
   name_prefix   = "${var.projectName}-workers-"
   image_id      = "ami-0630945e30e7f21a6"
@@ -50,6 +50,7 @@ resource "aws_launch_template" "workers" {
 #!/usr/bin/env bash
 set -euo pipefail
 
+# g4dn.xlarge instances come with an fast hard disk that the deep learning AMI mounts at /opt/dlami/nvme
 WORKING_DIRECTORY="/opt/dlami/nvme"
 
 mkdir -p "$${WORKING_DIRECTORY}/.cache/uv" "$${WORKING_DIRECTORY}/.cache/huggingface" "$${WORKING_DIRECTORY}/tmp"
@@ -59,11 +60,13 @@ apt install -y ffmpeg poppler-utils tesseract-ocr-all ghostscript
 # apt install -y  libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev
 snap install astral-uv --classic
 
+# HF_TOKEN is used to reduce risk of getting rate limited by hugging face when downloading models
+HF_TOKEN=$(aws ssm get-parameter --name /HUGGING_FACE_TOKEN --query 'Parameter.Value' --output text --region eu-west-1)
+
 git clone https://github.com/philmcmahon/data-pipeline.git $${WORKING_DIRECTORY}/data-pipeline
 chown -R "ubuntu:ubuntu" $${WORKING_DIRECTORY}
 
-sudo -u ubuntu bash $${WORKING_DIRECTORY}/data-pipeline/worker/initialise-worker.sh '${aws_sqs_queue.work.url}' '${aws_s3_bucket.output.bucket}' $${WORKING_DIRECTORY}
-
+sudo -u ubuntu bash $${WORKING_DIRECTORY}/data-pipeline/worker/initialise-worker.sh '${aws_sqs_queue.work.url}' '${aws_s3_bucket.output.bucket}' $${WORKING_DIRECTORY} $${HF_TOKEN}
 EOT
   )
 
@@ -134,6 +137,23 @@ resource "aws_iam_role_policy" "workers_s3" {
           aws_s3_bucket.output.arn,
           "${aws_s3_bucket.output.arn}/*"
         ]
+      }
+    ]
+  })
+}
+
+# Permission to read the Hugging Face token from SSM Parameter Store
+resource "aws_iam_role_policy" "workers_ssm_hf_token" {
+  name = "${var.projectName}-workers-ssm-hf-token"
+  role = aws_iam_role.workers.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "ssm:GetParameter"
+        Effect   = "Allow"
+        Resource = "arn:aws:ssm:eu-west-1:708599814125:parameter/HUGGING_FACE_TOKEN"
       }
     ]
   })

@@ -4,11 +4,12 @@ set -x
 
 # This script runs as the ubuntu user.
 # Usage:
-#   initialise-worker.sh <queue_url> <output_bucket> <working_directory>
+#   initialise-worker.sh <queue_url> <output_bucket> <working_directory> <hugging_face_token>
 
 QUEUE_URL="$1"
 OUTPUT_BUCKET="$2"
 WORKING_DIRECTORY="$3"
+export HF_TOKEN="$4"
 
 TARGET_DIR="${WORKING_DIRECTORY}/data-pipeline"
 WORKER_LOG="${WORKING_DIRECTORY}/worker.log"
@@ -23,6 +24,7 @@ cd "${TARGET_DIR}"
 echo "Installing worker dependencies with uv..."
 uv sync --extra worker
 
+# VllM is used to run models as a separate process that can be reused across multiple documents
 echo "Installing vllm..."
 uv pip install vllm --torch-backend auto
 
