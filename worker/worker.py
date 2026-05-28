@@ -18,14 +18,6 @@ _document_converter = None
 _vllm_process = None
 _openai_client = None
 
-SYSTEM_PROMPT = (
-    "You are an investigative journalist. Your job is to identify sections of the "
-    "file which match the user prompt. The output should be in CSV format, with 1 row "
-    "per match. Each row should have the format "
-    "input_file_name,input_file_s3_uri,matching_text,first_line,second_line"
-)
-
-
 def get_user_prompt(file_name, s3_uri, file_content):
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(PROMPTS_DIR),

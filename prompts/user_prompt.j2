@@ -8,10 +8,14 @@ Your output should be a JSON file following the schema:
 
 ```typescript
 type DocumentClassificationResponse = {
+file_name: string,
+s3_uri: string,
 relevant: true,
 quotes: string[],
 notes: string
 } | {
+file_name: string,
+s3_uri: string,
 relevant: false,
 notes: string
 }
@@ -20,10 +24,12 @@ notes: string
 For example:
 ```json
 {
-    "notes" : "the document mentions donald trump directly"
-    "quotes": ["1-1: This is the message that Mark Rutte sent to Donald Trump]
-    "relevant" : true,
-  }
+    "file_name": "file.txt",
+    "s3_uri": "s3://source-data/file.txt",
+    "notes" : "the document mentions donald trump directly",
+    "quotes": ["1-1: This is the message that Mark Rutte sent to Donald Trump"],
+    "relevant" : true
+}
 ```
 
 The output *must* be parseable as JSON. Do not add any text before or after the JSON.
@@ -31,5 +37,5 @@ Here is the document:
 <document>
 <file_name>{{ file_name }}</file_name>
 <s3_uri>{{ s3_uri }}</s3_uri>
-<contents>{{ file_content }}</content>
+<contents>{{ file_content }}</contents>
 </document>
