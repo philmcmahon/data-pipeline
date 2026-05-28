@@ -55,11 +55,11 @@ def ocr_document(file_path):
     converter = get_document_converter()
     print(f"Performing OCR on document: {file_path}")
     result = converter.convert(file_path)
-    md_path = file_path + ".md"
-    with open(md_path, "w") as f:
-        f.write(result.document.export_to_markdown())
-    print(f"OCR complete: {md_path}")
-    return md_path
+    txt_path = file_path + ".txt"
+    with open(txt_path, "w") as f:
+        f.write(result.document.export_to_text())
+    print(f"OCR complete: {txt_path}")
+    return txt_path
 
 
 def ocr_document_ocrmypdf(file_path):
@@ -72,7 +72,9 @@ def ocr_document_ocrmypdf(file_path):
     )
     print("Running ocr with ocrmypdf")
     ocrmypdf.ocr(options)
+    print("finished ocrmypdf, converting to text")
     # use pdftotext to extract text file, return text file
     text_output_path = file_path + ".txt"
     subprocess.run(["pdftotext", options.output_file, text_output_path, "-layout"], check=True)
+    print(f"OCR complete: {text_output_path}")
     return text_output_path

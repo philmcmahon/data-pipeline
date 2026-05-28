@@ -55,7 +55,7 @@ WORKING_DIRECTORY="/opt/dlami/nvme"
 mkdir -p "$${WORKING_DIRECTORY}/.cache/uv" "$${WORKING_DIRECTORY}/.cache/huggingface" "$${WORKING_DIRECTORY}/tmp"
 
 apt update
-apt install -y ffmpeg poppler-utils
+apt install -y ffmpeg poppler-utils tesseract-ocr-all ghostscript
 # apt install -y  libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev
 snap install astral-uv --classic
 

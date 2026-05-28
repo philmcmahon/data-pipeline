@@ -61,7 +61,7 @@ def consume_queue(queue_url, output_bucket):
             os.remove(output_path)
         elif job_type == "ocr":
             output_path = ocr_document_ocrmypdf(local_path)
-            s3_key = f"ocr/{os.path.splitext(original_filename)[0]}.md"
+            s3_key = f"ocr/{os.path.splitext(original_filename)[0]}.txt"
             upload_to_s3(s3, output_path, output_bucket, s3_key)
             os.remove(output_path)
         elif job_type == "prompt":
