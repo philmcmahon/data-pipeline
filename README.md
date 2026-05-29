@@ -9,7 +9,9 @@ The aim of this workshop is to build a scalable pipeline to use to process large
 As source data, we will use an Amazon S3 bucket containing:
 
 - podcasts/ - a selection of recent episodes from podcasts from a few different european countries
-- company_reports/ - company reports of the FTSE 350 companies from the london stock exchange
+- podcast_samples - the first 10 mins of a selection of podcasts
+- arms_oil_company_reports/ - annual reports of oil/arms companies
+- company_reports/ - (very big) selection of company reports of the FTSE 350 companies from the london stock exchange
 
 The workshop has three parts:
 
