@@ -16,4 +16,4 @@ chmod +x install-opentofu.sh
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-aws login --profile dataharvest --remote
+aws login --profile dataharvest --region eu-west-1 --remote 

@@ -21,20 +21,13 @@ The workshop has three parts:
 2.  Scheduling some work. See `populator/`.
 3.  Running the desired task on the work we have scheduled. See `worker/`.
 
-## Development environment
-This workshop requires installing 3 programs on your laptop. If you are unable to install them you should be able to instead
-use github codespaces:
+## Sign into AWS
 
-1. Go to the repo on GitHub, click the green **Code** button, select the **Codespaces** tab, and click **Create codespace on main**.
-2. Once the codespace has launched, open a terminal and run the setup script to install the AWS CLI, OpenTofu, and uv:
+First of all, sign in to Amazon web services using the provided credentials at this URL: https://708599814125.signin.aws.amazon.com/console/?region=eu-west-1
 
-```bash
-bash codespaces-setup.sh
-```
 
-## Setup
-
-For this workshop, you will need access to AWS. Firstly, make sure you have installed the aws cli. You can check if it's installed by running:
+## Setup - using your own laptop
+ Firstly, make sure you have installed the aws cli. You can check if it's installed by running:
 
 ```bash
 aws --version
@@ -43,8 +36,7 @@ aws --version
 
 If you get some output similar to `aws-cli/2.34.53 ...` then it is installed. To install it, follow the guide here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
-Once you have the CLI installed, go to https://708599814125.signin.aws.amazon.com/console/?region=eu-west-1
-and login using the credentials provided. Once you have logged in, in a terminal window run the command:
+Once you have the CLI installed, in a terminal window run the command:
 
 ```bash
 aws login --profile dataharvest --region eu-west-1
@@ -53,6 +45,20 @@ aws login --profile dataharvest --region eu-west-1
 It should pop open a browser. Select the account you just signed into.
 
 To test that your credentials are working, run `aws s3 ls --profile dataharvest` - you should see a list of data harvest related S3 buckets.
+
+
+## Setup - using github codespaces
+
+1. Sign in to github - a free account is fine. Go to the [repo](https://github.com/philmcmahon/data-pipeline) and click on the dropdown next to the + icon in the top right and select 'New codespace'
+
+
+2. Once the codespace has launched, open a terminal and run the setup script to install the AWS CLI, OpenTofu, and uv. 
+
+```bash
+bash codespaces-setup.sh
+```
+
+At the end of the script it should output a url you can use to sign in to AWS - copy it and paste it into your browser in a new tab. You'll get a code you need to paste back into the terminal.
 
 ## Creating your pipeline
 
