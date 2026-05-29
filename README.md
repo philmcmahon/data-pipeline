@@ -21,6 +21,17 @@ The workshop has three parts:
 2.  Scheduling some work. See `populator/`.
 3.  Running the desired task on the work we have scheduled. See `worker/`.
 
+## Development environment
+This workshop requires installing 3 programs on your laptop. If you are unable to install them you should be able to instead
+use github codespaces:
+
+1. Go to the repo on GitHub, click the green **Code** button, select the **Codespaces** tab, and click **Create codespace on main**.
+2. Once the codespace has launched, open a terminal and run the setup script to install the AWS CLI, OpenTofu, and uv:
+
+```bash
+bash codespaces-setup.sh
+```
+
 ## Setup
 
 For this workshop, you will need access to AWS. Firstly, make sure you have installed the aws cli. You can check if it's installed by running:
