@@ -51,6 +51,8 @@ To test that your credentials are working, run `aws s3 ls --profile dataharvest`
 
 1. Sign in to github - a free account is fine. Go to the [repo](https://github.com/philmcmahon/data-pipeline) and click on the dropdown next to the + icon in the top right and select 'New codespace'
 
+<img width="497" height="324" alt="Screenshot 2026-05-29 at 12 07 00" src="https://github.com/user-attachments/assets/9a3e547d-f108-4f8e-9042-481f30e4c5fa" />
+
 
 2. Once the codespace has launched, open a terminal and run the setup script to install the AWS CLI, OpenTofu, and uv. 
 
