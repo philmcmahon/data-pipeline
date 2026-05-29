@@ -13,7 +13,8 @@ def main():
     parser.add_argument("-o", "--output", default="output.csv", help="Output CSV file (default: output.csv)")
     args = parser.parse_args()
 
-    s3 = boto3.client("s3")
+    session = boto3.Session(profile_name="dataharvest")
+    s3 = session.client("s3")
     prefix = args.path.strip("/") + "/"
 
     paginator = s3.get_paginator("list_objects_v2")

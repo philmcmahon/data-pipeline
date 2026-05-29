@@ -8,8 +8,11 @@ from populator.supported_extensions import is_supported_key
 DEFAULT_BUCKET = "dh26-data-pipeline-data"
 
 
+session = boto3.Session(profile_name="dataharvest")
+
+
 def list_s3_objects(bucket, path):
-    s3 = boto3.client("s3")
+    s3 = session.client("s3")
     paginator = s3.get_paginator("list_objects_v2")
 
     for page in paginator.paginate(Bucket=bucket, Prefix=path):
@@ -23,7 +26,7 @@ def get_files_to_process(bucket, path):
 
 
 def publish_to_queue(queue_url, messages):
-    sqs = boto3.client("sqs")
+    sqs = session.client("sqs")
 
     for message in messages:
         sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps(message))
